@@ -220,7 +220,7 @@ public class Main {
                     "SELECT *, person.id AS id, ort.name AS heimat FROM person " +
                             "INNER JOIN figur  ON   figur.id        =  person.id " +
                             "LEFT  JOIN ort    ON   figur.heimat_id =  ort.id " +
-                            "WHERE TRUE LIMIT 5;"
+                            "WHERE TRUE ORDER BY person.id DESC LIMIT 5"
             );
 
             while (resultSet.next()) {
@@ -247,7 +247,7 @@ public class Main {
                             "LEFT  JOIN ort                         ON   tierFigur.heimat_id            =  ort.id " +
                             "LEFT  JOIN  person                     ON   person.id                      =  tier.besitzer_id " +
                             "LEFT  JOIN  figur besitzer             ON   person.id                      =  besitzer.id " +
-                            "WHERE TRUE LIMIT 5;"
+                            "WHERE TRUE ORDER BY person.id DESC LIMIT 5"
             );
 
             while (resultSet.next()) {
@@ -283,7 +283,7 @@ public class Main {
                     "SELECT *, haus.id AS id, haus.name AS name, burg.name AS burgName, ort.name AS standortName FROM haus " +
                             "INNER JOIN burg ON haus.sitz_id = burg.id " +
                             "INNER JOIN ort ON burg.standort_id = ort.id " +
-                            "WHERE TRUE"
+                            "WHERE TRUE ORDER BY haus.id DESC LIMIT 5"
             );
 
             while (resultSet.next()) {
@@ -317,7 +317,7 @@ public class Main {
             ResultSet resultSet = query(
                     "SELECT * FROM staffel "+
 
-                    "WHERE TRUE"
+                    "WHERE TRUE ORDER BY staffel.id DESC LIMIT 5"
             );
 
             while (resultSet.next()) {
