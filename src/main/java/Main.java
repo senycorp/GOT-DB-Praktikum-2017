@@ -8,7 +8,7 @@ import java.util.Map;
 import static spark.Spark.*;
 
 /**
- * MAIN
+ * Got WebApp
  *
  * @author Selcuk Kekec <senycorp@googlemail.com>
  */

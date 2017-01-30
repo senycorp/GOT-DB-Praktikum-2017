@@ -9,7 +9,11 @@
     <meta name="description" content="">
     <meta name="author" content="Selcuk Kekec <senycorp@googlemail.com>">
 
-    <title>Database Application</title>
+    <title>GoT WebApp</title>
+
+    <!-- Fav Icon -->
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
     <!-- Bootstrap Core CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -47,7 +51,10 @@
                     data-target="#bs-example-navbar-collapse-1">
                 <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
             </button>
-            <a class="navbar-brand" href="#page-top">Database Application</a>
+            <a class="navbar-brand" href="#page-top" style="float:none;">
+                <img class="img-responsive" src="img/got.png" alt="" width="64" style="display:inline;">
+                GoT WebApp
+            </a>
         </div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
@@ -77,11 +84,11 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
-                <img class="img-responsive" src="img/profile.png" alt="">
+                <img class="img-responsive" src="img/got.png" alt="" width="256">
                 <div class="intro-text">
-                    <span class="name">Start Bootstrap</span>
+                    <span class="name">GoT WebApp</span>
                     <hr class="star-light">
-                    <span class="skills">Web Developer - Graphic Artist - User Experience Designer</span>
+                    <span class="skills">Create - Update - Delete</span>
                 </div>
             </div>
         </div>
