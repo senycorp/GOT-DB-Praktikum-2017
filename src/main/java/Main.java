@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import static spark.Spark.*;
@@ -49,9 +50,6 @@ public class Main {
          * Start
          */
         get("/", (req, res) -> {
-            Map<String, Object> attributes = getViewMap();
-            attributes.put("message", "Hello World!");
-
             return render();
         }, getTemplateEngine());
 
@@ -70,6 +68,11 @@ public class Main {
         });
     }
 
+    /**
+     * Get user
+     *
+     * @return
+     */
     protected static Map<String, String> getUser() {
         if (Main.user == null) {
             try {
@@ -130,6 +133,10 @@ public class Main {
         Map<String, Object> attributes = getViewMap();
         attributes.put("content", "");
         attributes.put("userData", Main.getUser());
+        attributes.put("figures", getFigures());
+        attributes.put("haueser", getHaeuser());
+        attributes.put("seasons", getSeasons());
+        attributes.put("playlists", getPlaylists());
 
         return new ModelAndView(attributes, "index.ftl");
     }
@@ -199,5 +206,165 @@ public class Main {
         }
 
         return Main.templateEngine;
+    }
+
+    /**
+     * Get Figures
+     *
+     * @return
+     */
+    protected static ArrayList<HashMap> getFigures() {
+        ArrayList<HashMap> results = new ArrayList();
+        try {
+            ResultSet resultSet = query(
+                    "SELECT *, person.id AS id, ort.name AS heimat FROM person " +
+                            "INNER JOIN figur  ON   figur.id        =  person.id " +
+                            "LEFT  JOIN ort    ON   figur.heimat_id =  ort.id " +
+                            "WHERE TRUE LIMIT 5;"
+            );
+
+            while (resultSet.next()) {
+                HashMap<String, String> person = new HashMap<>();
+
+                person.put("id", resultSet.getString("id"));
+                person.put("typ", "person");
+                person.put("name", resultSet.getString("name"));
+                person.put("heimat", resultSet.getString("heimat"));
+                person.put("titel", resultSet.getString("titel"));
+                person.put("biografie", resultSet.getString("biografie"));
+
+                results.add(person);
+            }
+
+            resultSet = query(
+                    "SELECT tier.id as id, " +
+                            "besitzer.name AS besitzerName, " +
+                            "person.titel AS besitzerTitel, " +
+                            "tierFigur.name AS tierName,  " +
+                            "ort.name AS heimat " +
+                            "FROM tier " +
+                            "INNER JOIN figur   tierFigur           ON   tierFigur.id                   =  tier.id " +
+                            "LEFT  JOIN ort                         ON   tierFigur.heimat_id            =  ort.id " +
+                            "LEFT  JOIN  person                     ON   person.id                      =  tier.besitzer_id " +
+                            "LEFT  JOIN  figur besitzer             ON   person.id                      =  besitzer.id " +
+                            "WHERE TRUE LIMIT 5;"
+            );
+
+            while (resultSet.next()) {
+                HashMap<String, String> tier = new HashMap<>();
+
+                tier.put("id", resultSet.getString("id"));
+                tier.put("typ", "tier");
+                tier.put("name", resultSet.getString("tierName"));
+                tier.put("besitzer", resultSet.getString("besitzerName"));
+                tier.put("besitzerTitel", resultSet.getString("besitzerTitel"));
+                tier.put("heimat", resultSet.getString("heimat"));
+
+                results.add(tier);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
+    /**
+     * Get Häuser
+     *
+     * @return
+     */
+    protected static ArrayList<HashMap> getHaeuser() {
+        ArrayList<HashMap> results = new ArrayList<>();
+
+
+        try {
+            ResultSet resultSet = query(
+                    "SELECT *, haus.id AS id, haus.name AS name, burg.name AS burgName, ort.name AS standortName FROM haus " +
+                            "INNER JOIN burg ON haus.sitz_id = burg.id " +
+                            "INNER JOIN ort ON burg.standort_id = ort.id " +
+                            "WHERE TRUE"
+            );
+
+            while (resultSet.next()) {
+                HashMap<String, String> haus = new HashMap<>();
+
+                haus.put("id", resultSet.getString("id"));
+                haus.put("name", resultSet.getString("name"));
+                haus.put("motto", resultSet.getString("motto"));
+                haus.put("wappen", resultSet.getString("wappen"));
+                haus.put("burg", resultSet.getString("burgName"));
+                haus.put("standort", resultSet.getString("standortName"));
+
+                results.add(haus);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
+    /**
+     * Get Seasons
+     *
+     * @return
+     */
+    protected static ArrayList<HashMap> getSeasons() {
+        ArrayList<HashMap> results = new ArrayList<>();
+
+        try {
+            ResultSet resultSet = query(
+                    "SELECT * FROM staffel "+
+
+                    "WHERE TRUE"
+            );
+
+            while (resultSet.next()) {
+                HashMap<String, String> season = new HashMap<>();
+
+                season.put("id", resultSet.getString("id"));
+                season.put("nummer", resultSet.getString("nummer"));
+                season.put("startdatum", resultSet.getString("startdatum"));
+                season.put("episodenanzahl", resultSet.getString("episodenanzahl"));
+
+                results.add(season);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
+    /**
+     * Get Playlists of user
+     *
+     * @return
+     */
+    protected static ArrayList<HashMap> getPlaylists() {
+        ArrayList<HashMap> results = new ArrayList<>();
+
+        try {
+            ResultSet resultSet = query(
+                    "SELECT * FROM (SELECT playlist.id, count(playlist.id) AS episodenAnzahl FROM playlist \n" +
+                            "LEFT JOIN episode_playlist ON episode_playlist.playlist_id = playlist.id \n" +
+                            "WHERE besitzer_id = " + getUser().get("id") + " " +
+                            "GROUP BY playlist.id) AS grp"
+            );
+
+            while (resultSet.next()) {
+                HashMap<String, String> playlist = new HashMap<>();
+
+                playlist.put("id", resultSet.getString("id"));
+                playlist.put("episodenAnzahl", resultSet.getString("episodenAnzahl"));
+
+                results.add(playlist);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
     }
 }
