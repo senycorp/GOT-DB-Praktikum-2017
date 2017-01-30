@@ -72,6 +72,9 @@
                 <li class="page-scroll">
                     <a href="#contact">Contact</a>
                 </li>
+                <li>
+                    <a href="#"> |  <i class="fa fa-user"></i> ${userData.name}</a>
+                </li>
             </ul>
         </div>
         <!-- /.navbar-collapse -->
