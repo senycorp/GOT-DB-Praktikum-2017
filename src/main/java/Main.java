@@ -61,11 +61,16 @@ public class Main {
             }
         }, getTemplateEngine());
 
-        get("/hello", (request, response) -> {
-            Map<String, Object> attributes = getViewMap();
-            attributes.put("message", "Hello World!");
+        get("/animal/:id", (req, res) -> {
+            try {
+                Map<String, Object> attributes = getViewMap();
+                attributes.put("animal", getAnimal(Integer.parseInt(req.params(":id"))));
+                attributes.put("title", "Animal Detail View");
 
-            return render(new ModelAndView(attributes, "hello.ftl"));
+                return renderDetail(new ModelAndView(attributes, "animal.ftl"), attributes);
+            } catch (NotFoundException e) {
+                return renderNotFound(getViewMap());
+            }
         }, getTemplateEngine());
 
         /**
@@ -423,6 +428,44 @@ public class Main {
         }
 
         return results;
+    }
+
+    /**
+     * Get Animal by ID
+     *
+     * @param id
+     * @return
+     */
+    protected static HashMap<String, Object> getAnimal(int id) throws NotFoundException {
+        HashMap<String, Object> animal = new HashMap<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT *, tier.id AS id, ort.id AS heimatId, ort.name AS heimat, besitzer.name as besitzerName FROM tier " +
+                            "INNER JOIN figur  ON   figur.id        =  tier.id " +
+                            "INNER JOIN figur besitzer ON   besitzer.id        =  tier.besitzer_id " +
+                            "LEFT  JOIN ort    ON   figur.heimat_id =  ort.id " +
+                            "WHERE tier.id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                animal.put("id", resultSet.getString("id"));
+                animal.put("name", resultSet.getString("name"));
+                animal.put("heimat", resultSet.getString("heimat"));
+                animal.put("heimatId", resultSet.getString("heimatId"));
+                animal.put("besitzerName", resultSet.getString("besitzerName"));
+            } else {
+                throw new NotFoundException("Unable to find resource");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return animal;
     }
 
     /**
