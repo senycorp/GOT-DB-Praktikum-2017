@@ -114,6 +114,21 @@ public class Main {
         }, getTemplateEngine());
 
         /**
+         * Location Detail View
+         */
+        get("/episode/:id", (req, res) -> {
+            try {
+                Map<String, Object> attributes = getViewMap();
+                attributes.put("episode", getEpisode(Integer.parseInt(req.params(":id"))));
+                attributes.put("title", "Episode Detail View");
+
+                return renderDetail(new ModelAndView(attributes, "episode.ftl"), attributes);
+            } catch (NotFoundException e) {
+                return renderNotFound(getViewMap());
+            }
+        }, getTemplateEngine());
+
+        /**
          * Exception Handler
          */
 //        exception(NotFoundException.class, (exception, request, response) -> {
@@ -941,5 +956,125 @@ public class Main {
         }
 
         return haus;
+    }
+
+    /**
+     * Get Episode by ID
+     *
+     * @param id
+     * @return
+     */
+    protected static HashMap<String, Object> getEpisode(int id) throws NotFoundException {
+        HashMap<String, Object> episode = new HashMap<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT episode.*, staffel.nummer AS staffelName " +
+                            "FROM episode " +
+                            "INNER JOIN staffel ON staffel.id = episode.staffel_id " +
+                            "WHERE episode.id = ?;"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                episode.put("id", resultSet.getString("id"));
+                episode.put("titel", resultSet.getString("titel"));
+                episode.put("nummer", resultSet.getString("nummer"));
+                episode.put("inhaltsangabe", resultSet.getString("inhaltsangabe"));
+                episode.put("figures", getEpisodeFigures(id));
+                episode.put("locations", getEpisodeLocations(id));
+                episode.put("staffelName", resultSet.getString("staffelName"));
+
+            } else {
+                throw new NotFoundException("Unable to find resource");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return episode;
+    }
+
+    /**
+     * Get Figures of Episode
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> getEpisodeFigures(int id) {
+        ArrayList<HashMap> figures = new ArrayList<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT figur.*, person.id AS personId " +
+                            "FROM episode_figur " +
+                            "INNER JOIN figur ON figur.id = episode_figur.figur_id " +
+                            "LEFT JOIN person ON figur.id = person.id " +
+                            "LEFT JOIN tier ON figur.id = tier.id " +
+                            "WHERE episode_figur.episode_id = ?;"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> figure = new HashMap<>();
+
+                figure.put("id", resultSet.getString("id"));
+                figure.put("name", resultSet.getString("name"));
+
+                if (resultSet.getString("personId") == null) {
+                    figure.put("typ", "animal");
+                } else {
+                    figure.put("typ", "person");
+                }
+
+                figures.add(figure);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return figures;
+    }
+
+    /**
+     * Get Locations of Episode
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> getEpisodeLocations(int id) {
+        ArrayList<HashMap> locations = new ArrayList<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT ort.* " +
+                    "FROM episode_ort " +
+                            "INNER JOIN ort ON ort.id = episode_ort.ort_id " +
+                    "WHERE episode_ort.episode_id = ?;"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> location = new HashMap<>();
+
+                location.put("id", resultSet.getString("id"));
+                location.put("name", resultSet.getString("name"));
+
+                locations.add(location);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return locations;
     }
 }
