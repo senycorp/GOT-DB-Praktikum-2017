@@ -4,10 +4,7 @@ import spark.ModelAndView;
 import spark.Spark;
 import spark.template.freemarker.FreeMarkerEngine;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,12 +50,33 @@ public class Main {
             return render();
         }, getTemplateEngine());
 
+        get("/person/:id", (req, res) -> {
+            try {
+                Map<String, Object> attributes = getViewMap();
+                attributes.put("person", getPerson(Integer.parseInt(req.params(":id"))));
+                attributes.put("title", "Person Detail View");
+                return renderDetail(new ModelAndView(attributes, "person.ftl"), attributes);
+            } catch (NotFoundException e) {
+               return renderNotFound(getViewMap());
+            }
+        }, getTemplateEngine());
+
         get("/hello", (request, response) -> {
             Map<String, Object> attributes = getViewMap();
             attributes.put("message", "Hello World!");
 
             return render(new ModelAndView(attributes, "hello.ftl"));
         }, getTemplateEngine());
+
+        /**
+         * Exception Handler
+         */
+//        exception(NotFoundException.class, (exception, request, response) -> {
+//            Map<String, Object> attributes = getViewMap();
+//            attributes.put("userData", getUser());
+//            return getTemplateEngine().render(new ModelAndView(attributes, "notFound.ftl"));
+//        });
+
 
         /**
          * GZIP all requests
@@ -142,6 +160,34 @@ public class Main {
     }
 
     /**
+     * Render main detail template
+     *
+     * @param modelAndView
+     * @param additionalAttributes
+     * @return
+     */
+    protected static ModelAndView renderDetail(ModelAndView modelAndView, Map<String, Object> additionalAttributes) {
+        Map<String, Object> attributes = getViewMap();
+
+        attributes.putAll(additionalAttributes);
+        attributes.put("content", getTemplateEngine().render(modelAndView));
+        attributes.put("userData", Main.getUser());
+
+        return new ModelAndView(attributes, "detail.ftl");
+    }
+
+    /**
+     * Render NotFound template
+     *
+     * @param attributes
+     * @return
+     */
+    protected static ModelAndView renderNotFound(Map<String, Object> attributes) {
+        attributes.put("userData", getUser());
+        return new ModelAndView(attributes, "notFound.ftl");
+    }
+
+    /**
      * Get a database connection
      *
      * @return
@@ -176,6 +222,17 @@ public class Main {
      */
     protected static ResultSet query(String queryString) throws SQLException {
         return getDatabaseConnection().createStatement().executeQuery(queryString);
+    }
+
+    /**
+     * Prepare Statement to prevent SQL injection
+     *
+     * @param queryString
+     * @return
+     * @throws SQLException
+     */
+    protected static PreparedStatement preparedStatement(String queryString) throws SQLException {
+        return getDatabaseConnection().prepareStatement(queryString);
     }
 
     /**
@@ -367,4 +424,175 @@ public class Main {
 
         return results;
     }
+
+    /**
+     * Get Figure by ID
+     *
+     * @param id
+     * @return
+     */
+    protected static HashMap<String, Object> getPerson(int id) throws NotFoundException {
+        HashMap<String, Object> person = new HashMap<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT *, person.id AS id, ort.id AS heimatId, ort.name AS heimat FROM person " +
+                            "INNER JOIN figur  ON   figur.id        =  person.id " +
+                            "LEFT  JOIN ort    ON   figur.heimat_id =  ort.id " +
+                            "WHERE person.id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                person.put("id", resultSet.getString("id"));
+                person.put("typ", "person");
+                person.put("name", resultSet.getString("name"));
+                person.put("heimat", resultSet.getString("heimat"));
+                person.put("heimatId", resultSet.getString("heimatId"));
+                person.put("titel", resultSet.getString("titel"));
+                person.put("biografie", resultSet.getString("biografie"));
+                person.put("beziehungen", getFigureRelations(id));
+                person.put("tiere", getPersonAnimals(id));
+                person.put("haeuser", getFigureHaeuser(id));
+            } else {
+                throw new NotFoundException("Unable to find resource");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return person;
+    }
+
+
+    /**
+     * Get Häuser of Figure
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> getFigureHaeuser(int id) {
+        ArrayList<HashMap> haeuser = new ArrayList<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                "SELECT * FROM mitgliedschaft " +
+                        "INNER JOIN haus ON haus.id = mitgliedschaft.haus_id " +
+                        "WHERE person_id = ?;"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> haus = new HashMap<>();
+
+                haus.put("id", resultSet.getString("haus_id"));
+                haus.put("name", resultSet.getString("name"));
+                haus.put("art", resultSet.getString("art"));
+                haus.put("von", resultSet.getString("von"));
+                haus.put("bis", resultSet.getString("bis"));
+
+                haeuser.add(haus);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return haeuser;
+    }
+
+    /**
+     * Get Relations of Figure
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> getFigureRelations(int id) {
+        ArrayList<HashMap> relations = new ArrayList<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                "SELECT *," +
+                        "beziehungsart.name AS beziehungsArt, " +
+                        "f1.id AS person1Id, " +
+                        "f2.id AS person2Id, " +
+                        "f1.name AS person1Name, " +
+                        "f2.name AS person2Name " +
+                        "FROM beziehung "+
+                        "INNER JOIN beziehungsart ON beziehung.beziehungsart_id = beziehungsart.id " +
+                        "INNER JOIN person p1 ON p1.id = beziehung.person1_id " +
+                        "INNER JOIN figur f1 ON p1.id = f1.id "+
+                        "INNER JOIN person p2 ON p2.id = beziehung.person2_id " +
+                        "INNER JOIN figur f2 ON p2.id = f2.id "+
+                        "WHERE beziehung.person1_id = ? OR beziehung.person2_id = ? "
+            );
+
+            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(2, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> beziehung = new HashMap<>();
+
+                String columnPrefix = "person1";
+                if (resultSet.getString("person1Id").equals(String.valueOf(id))) {
+                    columnPrefix = "person2";
+                }
+
+                beziehung.put("id", resultSet.getString(columnPrefix + "id"));
+                beziehung.put("name", resultSet.getString(columnPrefix + "name"));
+                beziehung.put("beziehungsArt", resultSet.getString("beziehungsArt"));
+
+                relations.add(beziehung);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return relations;
+    }
+
+    /**
+     * Get Animals of Person
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> getPersonAnimals(int id) {
+        ArrayList<HashMap> animals = new ArrayList<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT *" +
+                            "FROM tier "+
+                            "INNER JOIN figur ON tier.id = figur.id "+
+                            "WHERE tier.besitzer_id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> animal = new HashMap<>();
+
+                animal.put("id", resultSet.getString("id"));
+                animal.put("name", resultSet.getString("name"));
+
+                animals.add(animal);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return animals;
+    }
+
+
 }

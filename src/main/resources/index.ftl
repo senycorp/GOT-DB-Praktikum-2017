@@ -51,7 +51,7 @@
                     data-target="#bs-example-navbar-collapse-1">
                 <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
             </button>
-            <a class="navbar-brand" href="#page-top" style="float:none;">
+            <a class="navbar-brand" href="" style="float:none;">
                 <img class="img-responsive" src="img/got.png" alt="" width="64" style="display:inline;">
                 GoT WebApp
             </a>
@@ -119,19 +119,36 @@
                         <th>Heimat</th>
                         <th>Typ</th>
                     </tr>
-                    <#list figures as figure>
-                        <#if figure.typ == "person">
-                            <tr>
-                                <td>${figure.id}</td>
-                                <td>${figure.name}</td>
-                                <td>${figure.titel}</td>
-                                <td>${figure.heimat}</td>
-                                <td><i class="fa fa-male"></i> Person</td>
-                            </tr>
-                        </#if>
-                    </#list>
+                <#list figures as figure>
+                    <#if figure.typ == "person">
+                        <tr>
+                            <td>${figure.id}</td>
+                            <td>${figure.name}</td>
+                            <td>${figure.titel}</td>
+                            <td>${figure.heimat}</td>
+                            <td><i class="fa fa-male"></i> Person</td>
+                        </tr>
+                    </#if>
+                </#list>
                 </table>
+                <hr />
+                <div class="row">
+                    <div class="col-md-2">
+                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
+                    </div>
+                    <div class="col-md-1 text-center">
 
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Suche nach...">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div>
+                </div>
+                <hr />
                 <table class="table">
                     <tr>
                         <th>ID</th>
@@ -152,6 +169,23 @@
                     </#if>
                 </#list>
                 </table>
+                <hr />
+                <div class="row">
+                    <div class="col-md-2">
+                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
+                    </div>
+                    <div class="col-md-1 text-center">
+
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Suche nach...">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -179,7 +213,7 @@
                 <#list haueser as haus>
                     <tr>
                         <td>${haus.id}</td>
-                        <td><img src="${haus.wappen}" /></td>
+                        <td><img src="${haus.wappen}"/></td>
                         <td>${haus.name}</td>
                         <td>${haus.motto}</td>
                         <td>${haus.burg}</td>
@@ -187,6 +221,23 @@
                     </tr>
                 </#list>
                 </table>
+                <hr />
+                <div class="row">
+                    <div class="col-md-2">
+                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
+                    </div>
+                    <div class="col-md-1 text-center">
+
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Suche nach...">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -218,6 +269,23 @@
                     </tr>
                 </#list>
                 </table>
+                <hr />
+                <div class="row">
+                    <div class="col-md-2">
+                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
+                    </div>
+                    <div class="col-md-1 text-center">
+
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Suche nach...">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -247,58 +315,35 @@
                     </tr>
                 </#list>
                 </table>
+                <hr />
+                <div class="row">
+                    <div class="col-md-2">
+                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
+                    </div>
+                    <div class="col-md-1 text-center">
+
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Suche nach...">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</section>
-
-<section id="content">
-${content}
 </section>
 
 <!-- Footer -->
 <footer class="text-center">
-    <div class="footer-above">
-        <div class="container">
-            <div class="row">
-                <div class="footer-col col-md-4">
-                    <h3>Location</h3>
-                    <p>3481 Melrose Place
-                        <br>Beverly Hills, CA 90210</p>
-                </div>
-                <div class="footer-col col-md-4">
-                    <h3>Around the Web</h3>
-                    <ul class="list-inline">
-                        <li>
-                            <a href="#" class="btn-social btn-outline"><i class="fa fa-fw fa-facebook"></i></a>
-                        </li>
-                        <li>
-                            <a href="#" class="btn-social btn-outline"><i class="fa fa-fw fa-google-plus"></i></a>
-                        </li>
-                        <li>
-                            <a href="#" class="btn-social btn-outline"><i class="fa fa-fw fa-twitter"></i></a>
-                        </li>
-                        <li>
-                            <a href="#" class="btn-social btn-outline"><i class="fa fa-fw fa-linkedin"></i></a>
-                        </li>
-                        <li>
-                            <a href="#" class="btn-social btn-outline"><i class="fa fa-fw fa-dribbble"></i></a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="footer-col col-md-4">
-                    <h3>About Freelancer</h3>
-                    <p>Freelance is a free to use, open source Bootstrap theme created by <a
-                            href="http://startbootstrap.com">Start Bootstrap</a>.</p>
-                </div>
-            </div>
-        </div>
-    </div>
     <div class="footer-below">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                    Copyright &copy; Your Website 2016
+                    Copyright &copy; Selcuk Kekec 2017
                 </div>
             </div>
         </div>
