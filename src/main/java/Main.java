@@ -11,6 +11,10 @@ import java.util.Map;
 import static spark.Spark.*;
 
 /**
+ * @todo close Ressources
+ */
+
+/**
  * Got WebApp
  *
  * @author Selcuk Kekec <senycorp@googlemail.com>
@@ -50,6 +54,9 @@ public class Main {
             return render();
         }, getTemplateEngine());
 
+        /**
+         * Person Detail View
+         */
         get("/person/:id", (req, res) -> {
             try {
                 Map<String, Object> attributes = getViewMap();
@@ -61,6 +68,9 @@ public class Main {
             }
         }, getTemplateEngine());
 
+        /**
+         * Animal Detail View
+         */
         get("/animal/:id", (req, res) -> {
             try {
                 Map<String, Object> attributes = getViewMap();
@@ -68,6 +78,21 @@ public class Main {
                 attributes.put("title", "Animal Detail View");
 
                 return renderDetail(new ModelAndView(attributes, "animal.ftl"), attributes);
+            } catch (NotFoundException e) {
+                return renderNotFound(getViewMap());
+            }
+        }, getTemplateEngine());
+
+        /**
+         * Haus Detail View
+         */
+        get("/haus/:id", (req, res) -> {
+            try {
+                Map<String, Object> attributes = getViewMap();
+                attributes.put("haus", getHaus(Integer.parseInt(req.params(":id"))));
+                attributes.put("title", "Haus Detail View");
+
+                return renderDetail(new ModelAndView(attributes, "haus.ftl"), attributes);
             } catch (NotFoundException e) {
                 return renderNotFound(getViewMap());
             }
@@ -637,5 +662,116 @@ public class Main {
         return animals;
     }
 
+    /**
+     * Get Haus by ID
+     *
+     * @param id
+     * @return
+     */
+    protected static HashMap<String, Object> getHaus(int id) throws NotFoundException {
+        HashMap<String, Object> haus = new HashMap<>();
 
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT *, haus.id as id, haus.name AS hausName, burg.id AS burgId, burg.name AS burgName, ort.id AS ortId, ort.name AS ortName FROM haus " +
+                            "INNER JOIN burg ON burg.id = haus.sitz_id " +
+                            "INNER JOIN ort ON ort.id = burg.standort_id " +
+                            "WHERE haus.id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                haus.put("id", resultSet.getString("id"));
+                haus.put("name", resultSet.getString("hausName"));
+                haus.put("burgId", resultSet.getString("burgId"));
+                haus.put("burgName", resultSet.getString("burgName"));
+                haus.put("ortId", resultSet.getString("ortId"));
+                haus.put("ortName", resultSet.getString("ortName"));
+                haus.put("members", getHausMembers(id));
+                haus.put("properties", getHausProperty(id));
+            } else {
+                throw new NotFoundException("Unable to find resource");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return haus;
+    }
+
+    /**
+     * Get members of haus
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> getHausMembers(int id) {
+        ArrayList<HashMap> members = new ArrayList<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT *, figur.id AS id, figur.name AS name " +
+                            "FROM mitgliedschaft "+
+                            "INNER JOIN person ON person.id = mitgliedschaft.person_id "+
+                            "INNER JOIN figur ON figur.id = person.id "+
+                            "WHERE mitgliedschaft.haus_id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> member = new HashMap<>();
+
+                member.put("id", resultSet.getString("id"));
+                member.put("name", resultSet.getString("name"));
+
+                members.add(member);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return members;
+    }
+
+    /**
+     * Get property of haus
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> getHausProperty(int id) {
+        ArrayList<HashMap> properties = new ArrayList<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT * " +
+                            "FROM herrschaft "+
+                            "INNER JOIN ort ON ort.id = herrschaft.ort_id "+
+                            "WHERE herrschaft.haus_id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> property = new HashMap<>();
+
+                property.put("id", resultSet.getString("id"));
+                property.put("name", resultSet.getString("name"));
+
+                properties.add(property);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return properties;
+    }
 }
