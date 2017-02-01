@@ -1,5 +1,6 @@
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
+import org.apache.commons.dbutils.DbUtils;
 import spark.ModelAndView;
 import spark.Spark;
 import spark.template.freemarker.FreeMarkerEngine;
@@ -8,6 +9,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 import static spark.Spark.*;
 
 /**
@@ -64,7 +66,7 @@ public class Main {
                 attributes.put("title", "Person Detail View");
                 return renderDetail(new ModelAndView(attributes, "person.ftl"), attributes);
             } catch (NotFoundException e) {
-               return renderNotFound(getViewMap());
+                return renderNotFound(getViewMap());
             }
         }, getTemplateEngine());
 
@@ -144,19 +146,13 @@ public class Main {
         }, getTemplateEngine());
 
         /**
-         * Exception Handler
-         */
-//        exception(NotFoundException.class, (exception, request, response) -> {
-//            Map<String, Object> attributes = getViewMap();
-//            attributes.put("userData", getUser());
-//            return getTemplateEngine().render(new ModelAndView(attributes, "notFound.ftl"));
-//        });
-
-
-        /**
-         * GZIP all requests
+         * After request proceeded
          */
         after((request, response) -> {
+            // Close Database Connection
+            DbUtils.closeQuietly(getDatabaseConnection());
+
+            // GZIP request
             response.header("Content-Encoding", "gzip");
         });
     }
@@ -202,7 +198,7 @@ public class Main {
 
     /**
      * Render Template
-     *
+     * <p>
      * This method will render a child template into
      * the main structure template with all dependencies
      *
@@ -347,8 +343,10 @@ public class Main {
      */
     protected static ArrayList<HashMap> getFigures() {
         ArrayList<HashMap> results = new ArrayList();
+
+        ResultSet resultSet = null;
         try {
-            ResultSet resultSet = query(
+            resultSet = query(
                     "SELECT *, person.id AS id, ort.name AS heimat FROM person " +
                             "INNER JOIN figur  ON   figur.id        =  person.id " +
                             "LEFT  JOIN ort    ON   figur.heimat_id =  ort.id " +
@@ -396,6 +394,8 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
         }
 
         return results;
@@ -409,9 +409,9 @@ public class Main {
     protected static ArrayList<HashMap> getHaeuser() {
         ArrayList<HashMap> results = new ArrayList<>();
 
-
+        ResultSet resultSet = null;
         try {
-            ResultSet resultSet = query(
+            resultSet = query(
                     "SELECT *, haus.id AS id, haus.name AS name, burg.name AS burgName, ort.name AS standortName FROM haus " +
                             "INNER JOIN burg ON haus.sitz_id = burg.id " +
                             "INNER JOIN ort ON burg.standort_id = ort.id " +
@@ -432,6 +432,8 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
         }
 
         return results;
@@ -445,11 +447,12 @@ public class Main {
     protected static ArrayList<HashMap> getSeasons() {
         ArrayList<HashMap> results = new ArrayList<>();
 
+        ResultSet resultSet = null;
         try {
-            ResultSet resultSet = query(
-                    "SELECT * FROM staffel "+
+            resultSet = query(
+                    "SELECT * FROM staffel " +
 
-                    "WHERE TRUE ORDER BY staffel.id DESC LIMIT 5"
+                            "WHERE TRUE ORDER BY staffel.id DESC LIMIT 5"
             );
 
             while (resultSet.next()) {
@@ -464,6 +467,8 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
         }
 
         return results;
@@ -477,8 +482,9 @@ public class Main {
     protected static ArrayList<HashMap> getPlaylists() {
         ArrayList<HashMap> results = new ArrayList<>();
 
+        ResultSet resultSet = null;
         try {
-            ResultSet resultSet = query(
+            resultSet = query(
                     "SELECT * FROM (SELECT playlist.id, count(playlist.id) AS episodenAnzahl FROM playlist \n" +
                             "LEFT JOIN episode_playlist ON episode_playlist.playlist_id = playlist.id \n" +
                             "WHERE besitzer_id = " + getUser().get("id") + " " +
@@ -495,6 +501,8 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
         }
 
         return results;
@@ -509,8 +517,10 @@ public class Main {
     protected static HashMap<String, Object> getAnimal(int id) throws NotFoundException {
         HashMap<String, Object> animal = new HashMap<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT *, tier.id AS id, ort.id AS heimatId, ort.name AS heimat, besitzer.name as besitzerName FROM tier " +
                             "INNER JOIN figur  ON   figur.id        =  tier.id " +
                             "INNER JOIN figur besitzer ON   besitzer.id        =  tier.besitzer_id " +
@@ -520,7 +530,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
                 animal.put("id", resultSet.getString("id"));
@@ -534,6 +544,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return animal;
@@ -548,8 +561,10 @@ public class Main {
     protected static HashMap<String, Object> getPerson(int id) throws NotFoundException {
         HashMap<String, Object> person = new HashMap<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT *, person.id AS id, ort.id AS heimatId, ort.name AS heimat FROM person " +
                             "INNER JOIN figur  ON   figur.id        =  person.id " +
                             "LEFT  JOIN ort    ON   figur.heimat_id =  ort.id " +
@@ -558,7 +573,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
                 person.put("id", resultSet.getString("id"));
@@ -576,6 +591,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return person;
@@ -591,16 +609,18 @@ public class Main {
     protected static ArrayList<HashMap> getFigureHaeuser(int id) {
         ArrayList<HashMap> haeuser = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
-                "SELECT * FROM mitgliedschaft " +
-                        "INNER JOIN haus ON haus.id = mitgliedschaft.haus_id " +
-                        "WHERE person_id = ?;"
+            preparedStatement = preparedStatement(
+                    "SELECT * FROM mitgliedschaft " +
+                            "INNER JOIN haus ON haus.id = mitgliedschaft.haus_id " +
+                            "WHERE person_id = ?;"
             );
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> haus = new HashMap<>();
@@ -615,6 +635,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return haeuser;
@@ -629,27 +652,29 @@ public class Main {
     protected static ArrayList<HashMap> getFigureRelations(int id) {
         ArrayList<HashMap> relations = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
-                "SELECT *," +
-                        "beziehungsart.name AS beziehungsArt, " +
-                        "f1.id AS person1Id, " +
-                        "f2.id AS person2Id, " +
-                        "f1.name AS person1Name, " +
-                        "f2.name AS person2Name " +
-                        "FROM beziehung "+
-                        "INNER JOIN beziehungsart ON beziehung.beziehungsart_id = beziehungsart.id " +
-                        "INNER JOIN person p1 ON p1.id = beziehung.person1_id " +
-                        "INNER JOIN figur f1 ON p1.id = f1.id "+
-                        "INNER JOIN person p2 ON p2.id = beziehung.person2_id " +
-                        "INNER JOIN figur f2 ON p2.id = f2.id "+
-                        "WHERE beziehung.person1_id = ? OR beziehung.person2_id = ? "
+            preparedStatement = preparedStatement(
+                    "SELECT *," +
+                            "beziehungsart.name AS beziehungsArt, " +
+                            "f1.id AS person1Id, " +
+                            "f2.id AS person2Id, " +
+                            "f1.name AS person1Name, " +
+                            "f2.name AS person2Name " +
+                            "FROM beziehung " +
+                            "INNER JOIN beziehungsart ON beziehung.beziehungsart_id = beziehungsart.id " +
+                            "INNER JOIN person p1 ON p1.id = beziehung.person1_id " +
+                            "INNER JOIN figur f1 ON p1.id = f1.id " +
+                            "INNER JOIN person p2 ON p2.id = beziehung.person2_id " +
+                            "INNER JOIN figur f2 ON p2.id = f2.id " +
+                            "WHERE beziehung.person1_id = ? OR beziehung.person2_id = ? "
             );
 
             preparedStatement.setInt(1, id);
             preparedStatement.setInt(2, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> beziehung = new HashMap<>();
@@ -667,6 +692,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return relations;
@@ -681,17 +709,19 @@ public class Main {
     protected static ArrayList<HashMap> getPersonAnimals(int id) {
         ArrayList<HashMap> animals = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT *" +
-                            "FROM tier "+
-                            "INNER JOIN figur ON tier.id = figur.id "+
+                            "FROM tier " +
+                            "INNER JOIN figur ON tier.id = figur.id " +
                             "WHERE tier.besitzer_id = ?"
             );
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> animal = new HashMap<>();
@@ -703,6 +733,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return animals;
@@ -717,8 +750,10 @@ public class Main {
     protected static HashMap<String, Object> getHaus(int id) throws NotFoundException {
         HashMap<String, Object> haus = new HashMap<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT *, haus.id as id, haus.name AS hausName, burg.id AS burgId, burg.name AS burgName, ort.id AS ortId, ort.name AS ortName FROM haus " +
                             "INNER JOIN burg ON burg.id = haus.sitz_id " +
                             "INNER JOIN ort ON ort.id = burg.standort_id " +
@@ -727,7 +762,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
                 haus.put("id", resultSet.getString("id"));
@@ -743,6 +778,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return haus;
@@ -757,18 +795,20 @@ public class Main {
     protected static ArrayList<HashMap> getHausMembers(int id) {
         ArrayList<HashMap> members = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT *, person.id AS personId, figur.name AS name " +
-                            "FROM mitgliedschaft "+
-                            "INNER JOIN person ON person.id = mitgliedschaft.person_id "+
-                            "INNER JOIN figur ON figur.id = person.id "+
+                            "FROM mitgliedschaft " +
+                            "INNER JOIN person ON person.id = mitgliedschaft.person_id " +
+                            "INNER JOIN figur ON figur.id = person.id " +
                             "WHERE mitgliedschaft.haus_id = ?"
             );
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> member = new HashMap<>();
@@ -780,6 +820,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return members;
@@ -794,17 +837,19 @@ public class Main {
     protected static ArrayList<HashMap> getHausProperty(int id) {
         ArrayList<HashMap> properties = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT * " +
-                            "FROM herrschaft "+
-                            "INNER JOIN ort ON ort.id = herrschaft.ort_id "+
+                            "FROM herrschaft " +
+                            "INNER JOIN ort ON ort.id = herrschaft.ort_id " +
                             "WHERE herrschaft.haus_id = ?"
             );
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> property = new HashMap<>();
@@ -816,6 +861,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return properties;
@@ -830,8 +878,11 @@ public class Main {
     protected static HashMap<String, Object> getLocation(int id) throws NotFoundException {
         HashMap<String, Object> location = new HashMap<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT *, burg.name AS burgName " +
                             "FROM ort " +
                             "LEFT JOIN burg ON burg.standort_id = ort.id " +
@@ -840,7 +891,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
                 location.put("id", resultSet.getString("id"));
@@ -854,6 +905,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return location;
@@ -868,18 +922,20 @@ public class Main {
     protected static ArrayList<HashMap> getLocationPersons(int id) {
         ArrayList<HashMap> persons = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT *, person.id AS personId " +
-                            "FROM figur "+
-                            "LEFT JOIN person ON person.id = figur.id "+
-                            "LEFT JOIN tier ON tier.id = figur.id "+
+                            "FROM figur " +
+                            "LEFT JOIN person ON person.id = figur.id " +
+                            "LEFT JOIN tier ON tier.id = figur.id " +
                             "WHERE figur.heimat_id = ?"
             );
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> person = new HashMap<>();
@@ -897,6 +953,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return persons;
@@ -911,8 +970,10 @@ public class Main {
     protected static ArrayList<HashMap> getLocationEpisodes(int id) {
         ArrayList<HashMap> episodes = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT *, episode.id AS episodeId, staffel.nummer AS staffelName, episode.titel AS episodeName " +
                             "FROM episode_ort " +
                             "INNER JOIN episode ON episode_ort.episode_id = episode.id " +
@@ -922,7 +983,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> episode = new HashMap<>();
@@ -935,6 +996,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return episodes;
@@ -949,8 +1013,10 @@ public class Main {
     protected static HashMap<String, String> getLocationHaus(int id) throws NotFoundException {
         HashMap<String, String> haus = new HashMap<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT haus.* " +
                             "FROM herrschaft " +
                             "INNER JOIN haus ON haus.id = herrschaft.haus_id " +
@@ -959,7 +1025,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
                 haus.put("id", resultSet.getString("id"));
@@ -969,6 +1035,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return haus;
@@ -983,8 +1052,10 @@ public class Main {
     protected static HashMap<String, Object> getEpisode(int id) throws NotFoundException {
         HashMap<String, Object> episode = new HashMap<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT episode.*, staffel.nummer AS staffelName " +
                             "FROM episode " +
                             "INNER JOIN staffel ON staffel.id = episode.staffel_id " +
@@ -993,7 +1064,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
                 episode.put("id", resultSet.getString("id"));
@@ -1010,6 +1081,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return episode;
@@ -1024,8 +1098,10 @@ public class Main {
     protected static ArrayList<HashMap> getEpisodeFigures(int id) {
         ArrayList<HashMap> figures = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT figur.*, person.id AS personId " +
                             "FROM episode_figur " +
                             "INNER JOIN figur ON figur.id = episode_figur.figur_id " +
@@ -1036,7 +1112,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> figure = new HashMap<>();
@@ -1054,6 +1130,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return figures;
@@ -1068,17 +1147,19 @@ public class Main {
     protected static ArrayList<HashMap> getEpisodeLocations(int id) {
         ArrayList<HashMap> locations = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT ort.* " +
-                    "FROM episode_ort " +
+                            "FROM episode_ort " +
                             "INNER JOIN ort ON ort.id = episode_ort.ort_id " +
-                    "WHERE episode_ort.episode_id = ?;"
+                            "WHERE episode_ort.episode_id = ?;"
             );
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> location = new HashMap<>();
@@ -1090,6 +1171,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return locations;
@@ -1104,8 +1188,10 @@ public class Main {
     protected static HashMap<String, Object> getSeason(int id) throws NotFoundException {
         HashMap<String, Object> season = new HashMap<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT * " +
                             "FROM staffel " +
                             "WHERE staffel.id = ? ;"
@@ -1113,7 +1199,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
                 season.put("id", resultSet.getString("id"));
@@ -1126,6 +1212,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return season;
@@ -1140,8 +1229,10 @@ public class Main {
     protected static ArrayList<HashMap> getSeasonEpisodes(int id) {
         ArrayList<HashMap> episodes = new ArrayList<>();
 
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
         try {
-            PreparedStatement preparedStatement = preparedStatement(
+            preparedStatement = preparedStatement(
                     "SELECT * " +
                             "FROM episode " +
                             "WHERE episode.staffel_id = ?"
@@ -1149,7 +1240,7 @@ public class Main {
 
             preparedStatement.setInt(1, id);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 HashMap<String, String> episode = new HashMap<>();
@@ -1163,6 +1254,9 @@ public class Main {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
         }
 
         return episodes;
