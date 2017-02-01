@@ -11,12 +11,12 @@
                 <div class="col-lg-12">
                     <h3>Herkunftsort</h3>
                     <hr />
-                    <p>${animal.heimat}</p>
+                    <p>${animal.heimat} <a href="/location/${animal.heimatId}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></p>
                 </div>
                 <div class="col-lg-12">
                     <h3>Besitzer</h3>
                     <hr />
-                    <p>${animal.besitzerName}</p>
+                    <p>${animal.besitzerName} <a href="/person/${animal.besitzerId}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></p>
                 </div>
             </div>
         </div>

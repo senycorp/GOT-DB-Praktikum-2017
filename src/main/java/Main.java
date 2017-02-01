@@ -528,6 +528,7 @@ public class Main {
                 animal.put("heimat", resultSet.getString("heimat"));
                 animal.put("heimatId", resultSet.getString("heimatId"));
                 animal.put("besitzerName", resultSet.getString("besitzerName"));
+                animal.put("besitzerId", resultSet.getString("besitzer_id"));
             } else {
                 throw new NotFoundException("Unable to find resource");
             }
@@ -758,7 +759,7 @@ public class Main {
 
         try {
             PreparedStatement preparedStatement = preparedStatement(
-                    "SELECT *, figur.id AS id, figur.name AS name " +
+                    "SELECT *, person.id AS personId, figur.name AS name " +
                             "FROM mitgliedschaft "+
                             "INNER JOIN person ON person.id = mitgliedschaft.person_id "+
                             "INNER JOIN figur ON figur.id = person.id "+
@@ -772,7 +773,7 @@ public class Main {
             while (resultSet.next()) {
                 HashMap<String, String> member = new HashMap<>();
 
-                member.put("id", resultSet.getString("id"));
+                member.put("id", resultSet.getString("personId"));
                 member.put("name", resultSet.getString("name"));
 
                 members.add(member);
@@ -833,7 +834,7 @@ public class Main {
             PreparedStatement preparedStatement = preparedStatement(
                     "SELECT *, burg.name AS burgName " +
                             "FROM ort " +
-                            "INNER JOIN burg ON burg.standort_id = ort.id " +
+                            "LEFT JOIN burg ON burg.standort_id = ort.id " +
                             "WHERE ort.id = ?;"
             );
 
@@ -912,7 +913,7 @@ public class Main {
 
         try {
             PreparedStatement preparedStatement = preparedStatement(
-                    "SELECT *, episode.id AS id, staffel.nummer AS staffelName, episode.titel AS episodeName " +
+                    "SELECT *, episode.id AS episodeId, staffel.nummer AS staffelName, episode.titel AS episodeName " +
                             "FROM episode_ort " +
                             "INNER JOIN episode ON episode_ort.episode_id = episode.id " +
                             "INNER JOIN staffel ON episode.staffel_id = staffel.id " +
@@ -926,7 +927,7 @@ public class Main {
             while (resultSet.next()) {
                 HashMap<String, String> episode = new HashMap<>();
 
-                episode.put("id", resultSet.getString("id"));
+                episode.put("id", resultSet.getString("episodeId"));
                 episode.put("staffelName", resultSet.getString("staffelName"));
                 episode.put("episodeName", resultSet.getString("episodeName"));
 
@@ -964,7 +965,7 @@ public class Main {
                 haus.put("id", resultSet.getString("id"));
                 haus.put("name", resultSet.getString("name"));
             } else {
-                throw new NotFoundException("Unable to find resource");
+                return null;
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1002,6 +1003,7 @@ public class Main {
                 episode.put("figures", getEpisodeFigures(id));
                 episode.put("locations", getEpisodeLocations(id));
                 episode.put("staffelName", resultSet.getString("staffelName"));
+                episode.put("staffelId", resultSet.getString("staffel_id"));
 
             } else {
                 throw new NotFoundException("Unable to find resource");

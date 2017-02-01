@@ -11,14 +11,14 @@
                 <div class="col-lg-12">
                     <h3>Sitz</h3>
                     <hr />
-                    <p>${haus.burgName} (${haus.ortName})</p>
+                    <p>${haus.burgName} (${haus.ortName} <a href="/location/${haus.ortId}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a>)</p>
                 </div>
                 <div class="col-lg-12">
                     <h3>Personen</h3>
                     <hr />
                     <p>
                     <#list haus.members as member>
-                        ${member.name}<br />
+                        ${member.name} <a href="/person/${member.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a><br />
                     </#list>
                     </p>
                 </div>
@@ -27,7 +27,7 @@
                     <hr />
                     <p>
                     <#list haus.properties as property>
-                    ${property.name}<br />
+                    ${property.name} <a href="/location/${property.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a><br />
                     </#list>
                     </p>
                 </div>

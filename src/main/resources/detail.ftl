@@ -51,7 +51,7 @@
                     data-target="#bs-example-navbar-collapse-1">
                 <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
             </button>
-            <a class="navbar-brand" href="" style="float:none;">
+            <a class="navbar-brand" href="/" style="float:none;">
                 <img class="img-responsive" src="/img/got.png" alt="" width="64" style="display:inline;">
                 GoT WebApp
             </a>

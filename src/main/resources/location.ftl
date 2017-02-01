@@ -4,7 +4,7 @@
             <div class="col-lg-12 text-center">
                 <h2>${location.name}</h2>
                 <hr class="star-primary">
-                aktuell in Besitz von <h3>${location.haus.name}</h3>
+                <#if location.haus??>aktuell in Besitz von <h3>${location.haus.name}</h3></#if>
             </div>
         </div>
         <div class="row">
@@ -21,7 +21,7 @@
                     <hr />
                     <p>
                     <#list location.persons as person>
-                        ${person.name} - ${person.typ}<br />
+                        ${person.name} <a href="/person/${person.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a><br />
                     </#list>
                     </p>
                 </div>
@@ -30,7 +30,7 @@
                     <hr />
                     <p>
                     <#list location.episodes as episode>
-                    ${episode.staffelName} ${episode.episodeName}<br />
+                    ${episode.staffelName} ${episode.episodeName} <a href="/episode/${episode.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a><br />
                     </#list>
                     </p>
                 </div>

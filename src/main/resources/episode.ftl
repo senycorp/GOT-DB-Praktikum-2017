@@ -4,7 +4,7 @@
             <div class="col-lg-12 text-center">
                 <h2>${episode.titel}</h2>
                 <hr class="star-primary">
-                Staffel:  <h3>${episode.staffelName}</h3>
+                Staffel:  <h3><a href="/season/${episode.staffelId}" class="btn btn-primary">${episode.staffelName} <i class="fa fa-arrow-circle-o-right"></i></a></h3>
             </div>
         </div>
         <div class="row">
@@ -21,7 +21,7 @@
                     <hr />
                     <p>
                     <#list episode.figures as figure>
-                        ${figure.name} - ${figure.typ}<br />
+                        ${figure.name} - <a href="/${figure.typ}/${figure.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a><br />
                     </#list>
                     </p>
                 </div>
@@ -30,7 +30,7 @@
                     <hr />
                     <p>
                     <#list episode.locations as location>
-                    ${location.name}<br />
+                        ${location.name} <a href="/location/${location.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a><br />
                     </#list>
                     </p>
                 </div>

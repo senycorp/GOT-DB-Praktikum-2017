@@ -51,7 +51,7 @@
                     data-target="#bs-example-navbar-collapse-1">
                 <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
             </button>
-            <a class="navbar-brand" href="" style="float:none;">
+            <a class="navbar-brand" href="/" style="float:none;">
                 <img class="img-responsive" src="img/got.png" alt="" width="64" style="display:inline;">
                 GoT WebApp
             </a>
@@ -94,7 +94,7 @@
                 <div class="intro-text">
                     <span class="name">GoT WebApp</span>
                     <hr class="star-light">
-                    <span class="skills">Create - Update - Delete</span>
+                    <#--<span class="skills">Create - Update - Delete</span>-->
                 </div>
             </div>
         </div>
@@ -118,6 +118,7 @@
                         <th>Titel</th>
                         <th>Heimat</th>
                         <th>Typ</th>
+                        <th></th>
                     </tr>
                 <#list figures as figure>
                     <#if figure.typ == "person">
@@ -127,6 +128,7 @@
                             <td>${figure.titel}</td>
                             <td>${figure.heimat}</td>
                             <td><i class="fa fa-male"></i> Person</td>
+                            <td><a href="/person/${figure.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></td>
                         </tr>
                     </#if>
                 </#list>
@@ -156,6 +158,7 @@
                         <th>Besitzer / Titel</th>
                         <th>Heimat</th>
                         <th>Typ</th>
+                        <th></th>
                     </tr>
                 <#list figures as figure>
                     <#if figure.typ == "tier">
@@ -165,6 +168,7 @@
                             <td>${figure.besitzer} / ${figure.besitzerTitel}</td>
                             <td>${figure.heimat}</td>
                             <td><i class="fa fa-paw"></i> Tier</td>
+                            <td><td><a href="/animal/${figure.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></td></td>
                         </tr>
                     </#if>
                 </#list>
@@ -209,6 +213,7 @@
                         <th>Motto</th>
                         <th>Burg</th>
                         <th>Standort</th>
+                        <th></th>
                     </tr>
                 <#list haueser as haus>
                     <tr>
@@ -218,6 +223,7 @@
                         <td>${haus.motto}</td>
                         <td>${haus.burg}</td>
                         <td>${haus.standort}</td>
+                        <td><a href="/haus/${haus.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></td>
                     </tr>
                 </#list>
                 </table>
@@ -259,6 +265,7 @@
                         <th>Nummer</th>
                         <th>Start</th>
                         <th>Episodenanzahl</th>
+                        <th></th>
                     </tr>
                 <#list seasons as season>
                     <tr>
@@ -266,6 +273,7 @@
                         <td>${season.nummer}</td>
                         <td>${season.startdatum}</td>
                         <td>${season.episodenanzahl}</td>
+                        <td><a href="/season/${season.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></td>
                     </tr>
                 </#list>
                 </table>
@@ -306,12 +314,14 @@
                         <th>ID</th>
                         <th>Besitzer</th>
                         <th>Episodenanzahl</th>
+                        <th></th>
                     </tr>
                 <#list playlists as playlist>
                     <tr>
                         <td>${playlist.id}</td>
                         <td>${userData.name}</td>
                         <td>${playlist.episodenAnzahl}</td>
+                        <td><a href="/playlist/${playlist.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></td>
                     </tr>
                 </#list>
                 </table>
