@@ -13,7 +13,7 @@ import java.util.Map;
 import static spark.Spark.*;
 
 /**
- * @todo close Ressources
+ * @todo FIX DATABASE CONNECTION STATUS
  */
 
 /**
@@ -146,11 +146,48 @@ public class Main {
         }, getTemplateEngine());
 
         /**
+         * Search for artifacts
+         */
+        get("/search/:type/:keyword", (req, res) -> {
+            try {
+                Map<String, Object> attributes = getViewMap();
+                String keyword = req.params(":keyword");
+
+                if (keyword.equalsIgnoreCase("all")) keyword = "";
+
+                attributes.put("keyword", keyword);
+                attributes.put("type", req.params(":type").toUpperCase());
+                String artifactType = req.params(":type");
+                String resultTemplate = "";
+
+                if (artifactType.equalsIgnoreCase("figures")) {
+                    attributes.put("title", "Searching for figures");
+                    attributes.put("rows", searchFigures(keyword));
+                    resultTemplate = "figureResults.ftl";
+                } else if (artifactType.equalsIgnoreCase("haus")) {
+                    attributes.put("title", "Searching for Haus");
+                    attributes.put("haueser", searchHaeuser(keyword));
+                    resultTemplate = "hausResults.ftl";
+                } else if (artifactType.equalsIgnoreCase("seasons")) {
+                    attributes.put("title", "Searching for Seasons");
+                    attributes.put("seasons", searchSeasons(keyword));
+                    resultTemplate = "seasonResults.ftl";
+                } else {
+                    throw new TypeNotFoundException();
+                }
+
+                return renderResults(new ModelAndView(attributes, resultTemplate), attributes);
+            } catch (TypeNotFoundException e) {
+                return renderTypeNotFound(getViewMap());
+            }
+        }, getTemplateEngine());
+
+        /**
          * After request proceeded
          */
         after((request, response) -> {
             // Close Database Connection
-            DbUtils.closeQuietly(getDatabaseConnection());
+            //DbUtils.closeQuietly(getDatabaseConnection());
 
             // GZIP request
             response.header("Content-Encoding", "gzip");
@@ -248,6 +285,23 @@ public class Main {
     }
 
     /**
+     * Render main results template
+     *
+     * @param modelAndView
+     * @param additionalAttributes
+     * @return
+     */
+    protected static ModelAndView renderResults(ModelAndView modelAndView, Map<String, Object> additionalAttributes) {
+        Map<String, Object> attributes = getViewMap();
+
+        attributes.putAll(additionalAttributes);
+        attributes.put("content", getTemplateEngine().render(modelAndView));
+        attributes.put("userData", Main.getUser());
+
+        return new ModelAndView(attributes, "results.ftl");
+    }
+
+    /**
      * Render NotFound template
      *
      * @param attributes
@@ -256,6 +310,17 @@ public class Main {
     protected static ModelAndView renderNotFound(Map<String, Object> attributes) {
         attributes.put("userData", getUser());
         return new ModelAndView(attributes, "notFound.ftl");
+    }
+
+    /**
+     * Render TypeNotFound template
+     *
+     * @param attributes
+     * @return
+     */
+    protected static ModelAndView renderTypeNotFound(Map<String, Object> attributes) {
+        attributes.put("userData", getUser());
+        return new ModelAndView(attributes, "typeNotFound.ftl");
     }
 
     /**
@@ -1261,4 +1326,169 @@ public class Main {
 
         return episodes;
     }
+
+    /**
+     * Search figures
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> searchFigures(String keyword) {
+        ArrayList<HashMap> rows = new ArrayList<>();
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            String queryString = "SELECT *, person.id AS isPerson, ort.name AS heimat " +
+                    "FROM figur " +
+                    "LEFT JOIN person ON person.id = figur.id " +
+                    "LEFT JOIN tier ON tier.id = figur.id " +
+                    "INNER JOIN ort ON ort.id = figur.heimat_id " +
+                    "WHERE   figur.name LIKE ? OR " +
+                    "person.titel LIKE ? OR " +
+                    "person.biografie LIKE ? ";
+
+            if (keyword.equals("")) {
+                queryString = queryString.concat(" OR TRUE");
+            } else {
+                keyword = "%" + keyword + "%";
+            }
+
+            preparedStatement = preparedStatement(
+                queryString
+            );
+
+            preparedStatement.setString(1, keyword);
+            preparedStatement.setString(2, keyword);
+            preparedStatement.setString(3, keyword);
+
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> row = new HashMap<>();
+
+                row.put("id", resultSet.getString("id"));
+                row.put("name", resultSet.getString("name"));
+                row.put("heimat", resultSet.getString("heimat"));
+
+                if (resultSet.getString("isPerson") != null) {
+                    row.put("typ", "person");
+                    row.put("titel", resultSet.getString("titel"));
+                    row.put("biografie", resultSet.getString("biografie"));
+                } else {
+                    row.put("typ", "animal");
+                }
+
+                rows.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
+        }
+
+        return rows;
+    }
+
+    /**
+     * Search Haeuser
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> searchHaeuser(String keyword) {
+        ArrayList<HashMap> rows = new ArrayList<>();
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            String queryString = "SELECT *, haus.id AS id, haus.name AS name, burg.name AS burgName, ort.name AS standortName FROM haus " +
+                    "INNER JOIN burg ON haus.sitz_id = burg.id " +
+                    "INNER JOIN ort ON burg.standort_id = ort.id " +
+                    "WHERE haus.name LIKE ? OR haus.motto LIKE ? ";
+
+            if (keyword.equals("")) {
+                queryString = queryString.concat(" OR TRUE");
+            } else {
+                keyword = "%" + keyword + "%";
+            }
+
+            preparedStatement = preparedStatement(queryString);
+
+            preparedStatement.setString(1, keyword);
+            preparedStatement.setString(2, keyword);
+
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> row = new HashMap<>();
+
+                row.put("id", resultSet.getString("id"));
+                row.put("name", resultSet.getString("name"));
+                row.put("motto", resultSet.getString("motto"));
+                row.put("wappen", resultSet.getString("wappen"));
+                row.put("burg", resultSet.getString("burgName"));
+                row.put("standort", resultSet.getString("standortName"));
+
+                rows.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
+        }
+
+        return rows;
+    }
+
+    /**
+     * Search Seasons
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> searchSeasons(String keyword) {
+        ArrayList<HashMap> rows = new ArrayList<>();
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            String queryString = "SELECT * FROM staffel " +
+                    "WHERE nummer LIKE ? OR episodenanzahl LIKE ? ";
+
+            if (keyword.equals("")) {
+                queryString = queryString.concat(" OR TRUE");
+            } else {
+                keyword = "%" + keyword + "%";
+            }
+
+            preparedStatement = preparedStatement(queryString);
+
+            preparedStatement.setString(1, keyword);
+            preparedStatement.setString(2, keyword);
+
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> row = new HashMap<>();
+
+                row.put("id", resultSet.getString("id"));
+                row.put("nummer", resultSet.getString("nummer"));
+                row.put("startdatum", resultSet.getString("startdatum"));
+                row.put("episodenanzahl", resultSet.getString("episodenanzahl"));
+
+                rows.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
+        }
+
+        return rows;
+    }
+
 }

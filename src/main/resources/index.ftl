@@ -134,23 +134,6 @@
                 </#list>
                 </table>
                 <hr />
-                <div class="row">
-                    <div class="col-md-2">
-                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
-                    </div>
-                    <div class="col-md-1 text-center">
-
-                    </div>
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Suche nach...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
-                            </span>
-                        </div><!-- /input-group -->
-                    </div>
-                </div>
-                <hr />
                 <table class="table">
                     <tr>
                         <th>ID</th>
@@ -176,7 +159,7 @@
                 <hr />
                 <div class="row">
                     <div class="col-md-2">
-                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
+                        <a href="/search/figures/all" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
                     </div>
                     <div class="col-md-1 text-center">
 
@@ -185,7 +168,7 @@
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="Suche nach...">
                             <span class="input-group-btn">
-                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
+                                <button class="btn btn-default" type="button" onClick="search('figures', this)"><i class="fa fa-search"></i> Search</button>
                             </span>
                         </div><!-- /input-group -->
                     </div>
@@ -230,7 +213,7 @@
                 <hr />
                 <div class="row">
                     <div class="col-md-2">
-                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
+                        <a href="/search/haus/all" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
                     </div>
                     <div class="col-md-1 text-center">
 
@@ -239,7 +222,7 @@
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="Suche nach...">
                             <span class="input-group-btn">
-                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
+                                <button class="btn btn-default" type="button" onClick="search('haus', this)"><i class="fa fa-search"></i> Search</button>
                             </span>
                         </div><!-- /input-group -->
                     </div>
@@ -280,7 +263,7 @@
                 <hr />
                 <div class="row">
                     <div class="col-md-2">
-                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
+                        <a href="/search/seasons/all" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
                     </div>
                     <div class="col-md-1 text-center">
 
@@ -289,7 +272,7 @@
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="Suche nach...">
                             <span class="input-group-btn">
-                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
+                                <button class="btn btn-default" type="button" onClick="search('seasons', this)"><i class="fa fa-search"></i> Search</button>
                             </span>
                         </div><!-- /input-group -->
                     </div>
@@ -328,18 +311,7 @@
                 <hr />
                 <div class="row">
                     <div class="col-md-2">
-                        <a href="" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Alle</a>
-                    </div>
-                    <div class="col-md-1 text-center">
-
-                    </div>
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Suche nach...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button"><i class="fa fa-search"></i> Search</button>
-                            </span>
-                        </div><!-- /input-group -->
+                        <a href="/" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Neue Playlist</a>
                     </div>
                 </div>
             </div>
