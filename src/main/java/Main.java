@@ -114,7 +114,7 @@ public class Main {
         }, getTemplateEngine());
 
         /**
-         * Location Detail View
+         * Episode Detail View
          */
         get("/episode/:id", (req, res) -> {
             try {
@@ -123,6 +123,21 @@ public class Main {
                 attributes.put("title", "Episode Detail View");
 
                 return renderDetail(new ModelAndView(attributes, "episode.ftl"), attributes);
+            } catch (NotFoundException e) {
+                return renderNotFound(getViewMap());
+            }
+        }, getTemplateEngine());
+
+        /**
+         * Season Detail View
+         */
+        get("/season/:id", (req, res) -> {
+            try {
+                Map<String, Object> attributes = getViewMap();
+                attributes.put("season", getSeason(Integer.parseInt(req.params(":id"))));
+                attributes.put("title", "Season Detail View");
+
+                return renderDetail(new ModelAndView(attributes, "season.ftl"), attributes);
             } catch (NotFoundException e) {
                 return renderNotFound(getViewMap());
             }
@@ -1076,5 +1091,78 @@ public class Main {
         }
 
         return locations;
+    }
+
+    /**
+     * Get Season by ID
+     *
+     * @param id
+     * @return
+     */
+    protected static HashMap<String, Object> getSeason(int id) throws NotFoundException {
+        HashMap<String, Object> season = new HashMap<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT * " +
+                            "FROM staffel " +
+                            "WHERE staffel.id = ? ;"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                season.put("id", resultSet.getString("id"));
+                season.put("nummer", resultSet.getString("nummer"));
+                season.put("startdatum", resultSet.getString("startdatum"));
+                season.put("episodenanzahl", resultSet.getString("episodenanzahl"));
+                season.put("episodes", getSeasonEpisodes(id));
+            } else {
+                throw new NotFoundException("Unable to find resource");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return season;
+    }
+
+    /**
+     * Get Episodes of Season
+     *
+     * @param id
+     * @return
+     */
+    protected static ArrayList<HashMap> getSeasonEpisodes(int id) {
+        ArrayList<HashMap> episodes = new ArrayList<>();
+
+        try {
+            PreparedStatement preparedStatement = preparedStatement(
+                    "SELECT * " +
+                            "FROM episode " +
+                            "WHERE episode.staffel_id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> episode = new HashMap<>();
+
+                episode.put("id", resultSet.getString("id"));
+                episode.put("titel", resultSet.getString("titel"));
+                episode.put("nummer", resultSet.getString("nummer"));
+                episode.put("erstausstrahlungsdatum", resultSet.getString("erstausstrahlungsdatum"));
+
+                episodes.add(episode);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return episodes;
     }
 }
