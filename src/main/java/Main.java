@@ -198,10 +198,19 @@ public class Main {
         }, getTemplateEngine());
 
         /**
-         * Season Detail View
+         * Create Rating
          */
         get("/rate/:id", (req, res) -> {
             saveRating(Integer.parseInt(req.params(":id")), Integer.parseInt(req.queryMap().get("rating").value()), req.queryMap().get("text").value());
+            return "OK";
+        });
+
+        /**
+         * Create Rating
+         */
+        get("/createPlaylist", (req, res) -> {
+            createPlaylist(req.queryMap().get("title").value());
+
             return "OK";
         });
 
@@ -1696,7 +1705,7 @@ public class Main {
                             "FROM episode_playlist " +
                             "INNER JOIN episode ON episode.id = episode_playlist.episode_id " +
                             "INNER JOIN staffel ON staffel.id = episode.staffel_id " +
-                            "WHERE episode_playlist.playlist_id = ?"
+                            "WHERE episode_playlist.playlist_id = ? ORDER BY staffel.nummer ASC"
             );
 
             preparedStatement.setInt(1, id);
@@ -1727,5 +1736,33 @@ public class Main {
         }
 
         return data;
+    }
+
+    /**
+     * Create a new playlist
+     *
+     * @param title
+     * @return
+     */
+    protected static boolean createPlaylist(String title) {
+        PreparedStatement preparedStatement = null;
+        boolean ret = false;
+        try {
+            preparedStatement = preparedStatement(
+                "INSERT INTO playlist VALUES(NULL, ?, ?);"
+            );
+
+            preparedStatement.setString(1, title);
+            preparedStatement.setString(2, getUser().get("id"));
+            preparedStatement.executeUpdate();
+
+            ret = true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(preparedStatement);
+        }
+
+        return ret;
     }
 }

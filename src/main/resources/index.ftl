@@ -312,8 +312,14 @@
                 </table>
                 <hr />
                 <div class="row">
-                    <div class="col-md-2">
-                        <a href="/" class="btn btn-primary btn-block"><i class="fa fa-bars"></i> Neue Playlist</a>
+                    <div class="col-lg-12">
+                        <form class="form-inline pull-right">
+                            <div class="form-group">
+                                <#--<label for="playlistTitle">Titel</label>-->
+                                <input type="text" class="form-control" id="playlistTitle" placeholder="Playlist Titel...">
+                            </div>
+                            <button type="button" onClick="createPlaylist($('#playlistTitle').val())" class="btn btn-primary"><i class="fa fa-save"></i> Create Playlist</button>
+                        </form>
                     </div>
                 </div>
             </div>

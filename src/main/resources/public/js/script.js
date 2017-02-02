@@ -37,3 +37,19 @@ function saveRating(id, rating, text) {
 
     return false;
 }
+
+function createPlaylist(playlistTitle) {
+    $.ajax({
+        method: "GET",
+        url: "/createPlaylist",
+        data: { title: playlistTitle }
+    }).done(function( msg ) {
+        if (msg == "OK") {
+            window.location.href = window.location.href;
+        } else {
+            alert(msg);
+        }
+    });
+
+    return false;
+}
