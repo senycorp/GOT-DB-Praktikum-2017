@@ -18,6 +18,11 @@
                     <hr />
                     <p>${animal.besitzerName} <a href="/person/${animal.besitzerId}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></p>
                 </div>
+                <div class="col-lg-12">
+                    <hr />
+                <#assign ratingData=animal.ratingData>
+                <#include "rating.ftl" parse=true>
+                </div>
             </div>
         </div>
     </div>

@@ -183,6 +183,14 @@ public class Main {
         }, getTemplateEngine());
 
         /**
+         * Season Detail View
+         */
+        get("/rate/:id", (req, res) -> {
+            saveRating(Integer.parseInt(req.params(":id")), Integer.parseInt(req.queryMap().get("rating").value()), req.queryMap().get("text").value());
+            return "OK";
+        });
+
+        /**
          * After request proceeded
          */
         after((request, response) -> {
@@ -604,6 +612,7 @@ public class Main {
                 animal.put("heimatId", resultSet.getString("heimatId"));
                 animal.put("besitzerName", resultSet.getString("besitzerName"));
                 animal.put("besitzerId", resultSet.getString("besitzer_id"));
+                animal.put("ratingData", getRatingData(id));
             } else {
                 throw new NotFoundException("Unable to find resource");
             }
@@ -651,6 +660,7 @@ public class Main {
                 person.put("beziehungen", getFigureRelations(id));
                 person.put("tiere", getPersonAnimals(id));
                 person.put("haeuser", getFigureHaeuser(id));
+                person.put("ratingData", getRatingData(id));
             } else {
                 throw new NotFoundException("Unable to find resource");
             }
@@ -838,6 +848,7 @@ public class Main {
                 haus.put("ortName", resultSet.getString("ortName"));
                 haus.put("members", getHausMembers(id));
                 haus.put("properties", getHausProperty(id));
+                haus.put("ratingData", getRatingData(id));
             } else {
                 throw new NotFoundException("Unable to find resource");
             }
@@ -1140,6 +1151,7 @@ public class Main {
                 episode.put("locations", getEpisodeLocations(id));
                 episode.put("staffelName", resultSet.getString("staffelName"));
                 episode.put("staffelId", resultSet.getString("staffel_id"));
+                episode.put("ratingData", getRatingData(id));
 
             } else {
                 throw new NotFoundException("Unable to find resource");
@@ -1272,6 +1284,7 @@ public class Main {
                 season.put("startdatum", resultSet.getString("startdatum"));
                 season.put("episodenanzahl", resultSet.getString("episodenanzahl"));
                 season.put("episodes", getSeasonEpisodes(id));
+                season.put("ratingData", getRatingData(id));
             } else {
                 throw new NotFoundException("Unable to find resource");
             }
@@ -1491,4 +1504,116 @@ public class Main {
         return rows;
     }
 
+    /**
+     * Get Episodes of Season
+     *
+     * @param id
+     * @return
+     */
+    protected static HashMap<String, Object> getRatingData(int id) {
+        HashMap<String, Object> data = new HashMap<>();
+        ArrayList<HashMap> ratings = new ArrayList<>();
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        float totalRating = 0f;
+        try {
+            preparedStatement = preparedStatement(
+                    "SELECT * " +
+                            "FROM bewertung " +
+                            "INNER JOIN benutzer ON benutzer.id = bewertung.bewerter_id " +
+                            "WHERE bewertung.bewertbar_id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> rating = new HashMap<>();
+
+                rating.put("id", resultSet.getString("id"));
+                rating.put("rating", resultSet.getString("rating"));
+                rating.put("name", resultSet.getString("name"));
+                rating.put("text", resultSet.getString("text"));
+
+                totalRating += (float)resultSet.getInt("rating");
+
+                ratings.add(rating);
+            }
+
+            data.put("id", id);
+            data.put("data", ratings);
+            data.put("totalRating", totalRating / ratings.size());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
+        }
+
+        return data;
+    }
+
+    /**
+     * Save Rating
+     *
+     * @param rating
+     * @param text
+     * @return
+     */
+    protected static boolean saveRating(int id, int rating, String text) throws SQLException {
+
+        PreparedStatement preparedStatement = null;
+        PreparedStatement p1 = null;
+        PreparedStatement p2 = null;
+        try {
+            preparedStatement = preparedStatement(
+                    "SELECT * FROM bewertung " +
+                            "WHERE bewertbar_id = ? AND bewerter_id = ?;"
+            );
+
+            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(2, Integer.parseInt(getUser().get("id")));
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Disable auto commit
+            getDatabaseConnection().setAutoCommit(false);
+
+            // Check whether a rating exists
+            if (resultSet.next()) {
+                p1 = preparedStatement("DELETE FROM bewertung WHERE bewertbar_id = ? AND bewerter_id = ?;");
+                p1.setInt(1, id);
+                p1.setInt(2, Integer.parseInt(getUser().get("id")));
+
+                p1.executeUpdate();
+            }
+
+            p2 = preparedStatement("INSERT INTO bewertung VALUES(NULL, ?, ?, ?, ?)");
+            p2.setInt(1, id);
+            p2.setInt(2, Integer.parseInt(getUser().get("id")));
+            p2.setInt(3, rating);
+            p2.setString(4, text);
+            p2.executeUpdate();
+
+            try {
+                getDatabaseConnection().commit();
+                return true;
+            } catch (SQLException eSQL) {
+                getDatabaseConnection().rollback();
+                eSQL.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw e;
+        } finally {
+            DbUtils.closeQuietly(preparedStatement);
+            DbUtils.closeQuietly(p1);
+            DbUtils.closeQuietly(p2);
+        }
+
+        return false;
+    }
 }

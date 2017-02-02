@@ -41,6 +41,11 @@
                     ${animal.name} <a href="/animal/${animal.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a>
                 </#list>
                 </div>
+                <div class="col-lg-12">
+                    <hr />
+                    <#assign ratingData=person.ratingData>
+                    <#include "rating.ftl" parse=true>
+                </div>
             </div>
         </div>
     </div>

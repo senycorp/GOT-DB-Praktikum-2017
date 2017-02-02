@@ -34,6 +34,11 @@
                     </#list>
                     </p>
                 </div>
+                <div class="col-lg-12">
+                    <hr />
+                <#assign ratingData=episode.ratingData>
+                <#include "rating.ftl" parse=true>
+                </div>
             </div>
         </div>
     </div>

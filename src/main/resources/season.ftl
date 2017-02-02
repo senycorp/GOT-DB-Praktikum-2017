@@ -13,10 +13,15 @@
                     <hr />
                     <p>
                     <#list season.episodes as episode>
-                        ${episode.titel} - ${episode.nummer} - ${episode.erstausstrahlungsdatum}<br />
+                        ${episode.titel} - ${episode.nummer} - ${episode.erstausstrahlungsdatum} <a href="/episode/${episode.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a><br />
                     </#list>
                     </p>
                 </div>
+            </div>
+            <div class="col-lg-12">
+                <hr />
+            <#assign ratingData=season.ratingData>
+            <#include "rating.ftl" parse=true>
             </div>
         </div>
     </div>
