@@ -146,6 +146,21 @@ public class Main {
         }, getTemplateEngine());
 
         /**
+         * Playlist Detail View
+         */
+        get("/playlist/:id", (req, res) -> {
+            try {
+                Map<String, Object> attributes = getViewMap();
+                attributes.put("playlist", getPlaylist(Integer.parseInt(req.params(":id"))));
+                attributes.put("title", "Playlist Detail View");
+
+                return renderDetail(new ModelAndView(attributes, "playlist.ftl"), attributes);
+            } catch (NotFoundException e) {
+                return renderNotFound(getViewMap());
+            }
+        }, getTemplateEngine());
+
+        /**
          * Search for artifacts
          */
         get("/search/:type/:keyword", (req, res) -> {
@@ -558,7 +573,7 @@ public class Main {
         ResultSet resultSet = null;
         try {
             resultSet = query(
-                    "SELECT * FROM (SELECT playlist.id, count(playlist.id) AS episodenAnzahl FROM playlist \n" +
+                    "SELECT * FROM (SELECT playlist.id, playlist.titel, count(playlist.id) AS episodenAnzahl FROM playlist \n" +
                             "LEFT JOIN episode_playlist ON episode_playlist.playlist_id = playlist.id \n" +
                             "WHERE besitzer_id = " + getUser().get("id") + " " +
                             "GROUP BY playlist.id) AS grp"
@@ -568,6 +583,7 @@ public class Main {
                 HashMap<String, String> playlist = new HashMap<>();
 
                 playlist.put("id", resultSet.getString("id"));
+                playlist.put("titel", resultSet.getString("titel"));
                 playlist.put("episodenAnzahl", resultSet.getString("episodenAnzahl"));
 
                 results.add(playlist);
@@ -1615,5 +1631,101 @@ public class Main {
         }
 
         return false;
+    }
+
+    /**
+     * Get Playlist by ID
+     *
+     * @param id
+     * @return
+     */
+    protected static HashMap<String, Object> getPlaylist(int id) throws NotFoundException {
+        /**
+         * @todo
+         * Check for AUTH
+         */
+
+        HashMap<String, Object> playlist = new HashMap<>();
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = preparedStatement(
+                    "SELECT * " +
+                            "FROM playlist " +
+                            "WHERE playlist.id = ? ;"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                playlist.put("id", resultSet.getString("id"));
+                playlist.put("titel", resultSet.getString("titel"));
+                playlist.put("episodes", getPlaylistEpisodes(id));
+            } else {
+                throw new NotFoundException("Unable to find resource");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
+        }
+
+        return playlist;
+    }
+
+    /**
+     * Get Episodes of Season
+     *
+     * @param id
+     * @return
+     */
+    protected static HashMap<String, Object> getPlaylistEpisodes(int id) {
+        HashMap<String, Object> data = new HashMap<>();
+        ArrayList<HashMap> episodes = new ArrayList<>();
+        ArrayList<String> seasons = new ArrayList<>();
+
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = preparedStatement(
+                    "SELECT episode.*, staffel.nummer AS staffelNummer " +
+                            "FROM episode_playlist " +
+                            "INNER JOIN episode ON episode.id = episode_playlist.episode_id " +
+                            "INNER JOIN staffel ON staffel.id = episode.staffel_id " +
+                            "WHERE episode_playlist.playlist_id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                HashMap<String, String> episode = new HashMap<>();
+
+                episode.put("id", resultSet.getString("id"));
+                episode.put("titel", resultSet.getString("titel"));
+                episode.put("nummer", resultSet.getString("nummer"));
+                episode.put("staffelNummer", resultSet.getString("staffelNummer"));
+                episode.put("erstausstrahlungsdatum", resultSet.getString("erstausstrahlungsdatum"));
+
+                if (!seasons.contains(resultSet.getString("staffelNummer"))) seasons.add(resultSet.getString("staffelNummer"));
+
+                episodes.add(episode);
+            }
+
+            data.put("data", episodes);
+            data.put("seasons", seasons);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DbUtils.closeQuietly(resultSet);
+            DbUtils.closeQuietly(preparedStatement);
+        }
+
+        return data;
     }
 }

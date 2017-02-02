@@ -295,6 +295,7 @@
                 <table class="table">
                     <tr>
                         <th>ID</th>
+                        <th>Titel</th>
                         <th>Besitzer</th>
                         <th>Episodenanzahl</th>
                         <th></th>
@@ -302,6 +303,7 @@
                 <#list playlists as playlist>
                     <tr>
                         <td>${playlist.id}</td>
+                        <td>${playlist.titel}</td>
                         <td>${userData.name}</td>
                         <td>${playlist.episodenAnzahl}</td>
                         <td><a href="/playlist/${playlist.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></td>
