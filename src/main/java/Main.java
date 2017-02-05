@@ -1,21 +1,14 @@
+
+/**
+ * IMPORTS
+ */
 import Exceptions.NotFoundException;
 import Exceptions.TypeNotFoundException;
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.template.Configuration;
 import org.apache.commons.dbutils.DbUtils;
 import spark.ModelAndView;
 import spark.Spark;
-import spark.template.freemarker.FreeMarkerEngine;
-
-import java.sql.*;
-import java.util.HashMap;
 import java.util.Map;
-
 import static spark.Spark.*;
-
-/**
- * @todo FIX DATABASE CONNECTION STATUS
- */
 
 /**
  * Got WebApp
@@ -23,11 +16,6 @@ import static spark.Spark.*;
  * @author Selcuk Kekec <senycorp@googlemail.com>
  */
 public class Main {
-
-    /**
-     * Template Engine Instance
-     */
-    protected static FreeMarkerEngine templateEngine = null;
 
     /**
      * Main
@@ -44,119 +32,119 @@ public class Main {
          * Start
          */
         get("/", (req, res) -> {
-            return render();
-        }, getTemplateEngine());
+            return TemplateEngine.render();
+        }, TemplateEngine.getTemplateEngine());
 
         /**
          * Person Detail View
          */
         get("/person/:id", (req, res) -> {
             try {
-                Map<String, Object> attributes = getViewMap();
+                Map<String, Object> attributes = TemplateEngine.getViewMap();
                 attributes.put("person", DAO.getPerson(Integer.parseInt(req.params(":id"))));
                 attributes.put("title", "Person Detail View");
-                return renderDetail(new ModelAndView(attributes, "person.ftl"), attributes);
+                return TemplateEngine.renderDetail(new ModelAndView(attributes, "person.ftl"), attributes);
             } catch (NotFoundException e) {
-                return renderNotFound(getViewMap());
+                return TemplateEngine.renderNotFound(TemplateEngine.getViewMap());
             }
-        }, getTemplateEngine());
+        }, TemplateEngine.getTemplateEngine());
 
         /**
          * Animal Detail View
          */
         get("/animal/:id", (req, res) -> {
             try {
-                Map<String, Object> attributes = getViewMap();
+                Map<String, Object> attributes = TemplateEngine.getViewMap();
                 attributes.put("animal", DAO.getAnimal(Integer.parseInt(req.params(":id"))));
                 attributes.put("title", "Animal Detail View");
 
-                return renderDetail(new ModelAndView(attributes, "animal.ftl"), attributes);
+                return TemplateEngine.renderDetail(new ModelAndView(attributes, "animal.ftl"), attributes);
             } catch (NotFoundException e) {
-                return renderNotFound(getViewMap());
+                return TemplateEngine.renderNotFound(TemplateEngine.getViewMap());
             }
-        }, getTemplateEngine());
+        }, TemplateEngine.getTemplateEngine());
 
         /**
          * Haus Detail View
          */
         get("/haus/:id", (req, res) -> {
             try {
-                Map<String, Object> attributes = getViewMap();
+                Map<String, Object> attributes = TemplateEngine.getViewMap();
                 attributes.put("haus", DAO.getHaus(Integer.parseInt(req.params(":id"))));
                 attributes.put("title", "Haus Detail View");
 
-                return renderDetail(new ModelAndView(attributes, "haus.ftl"), attributes);
+                return TemplateEngine.renderDetail(new ModelAndView(attributes, "haus.ftl"), attributes);
             } catch (NotFoundException e) {
-                return renderNotFound(getViewMap());
+                return TemplateEngine.renderNotFound(TemplateEngine.getViewMap());
             }
-        }, getTemplateEngine());
+        }, TemplateEngine.getTemplateEngine());
 
         /**
          * Location Detail View
          */
         get("/location/:id", (req, res) -> {
             try {
-                Map<String, Object> attributes = getViewMap();
+                Map<String, Object> attributes = TemplateEngine.getViewMap();
                 attributes.put("location", DAO.getLocation(Integer.parseInt(req.params(":id"))));
                 attributes.put("title", "Location Detail View");
 
-                return renderDetail(new ModelAndView(attributes, "location.ftl"), attributes);
+                return TemplateEngine.renderDetail(new ModelAndView(attributes, "location.ftl"), attributes);
             } catch (NotFoundException e) {
-                return renderNotFound(getViewMap());
+                return TemplateEngine.renderNotFound(TemplateEngine.getViewMap());
             }
-        }, getTemplateEngine());
+        }, TemplateEngine.getTemplateEngine());
 
         /**
          * Episode Detail View
          */
         get("/episode/:id", (req, res) -> {
             try {
-                Map<String, Object> attributes = getViewMap();
+                Map<String, Object> attributes = TemplateEngine.getViewMap();
                 attributes.put("episode", DAO.getEpisode(Integer.parseInt(req.params(":id"))));
                 attributes.put("title", "Episode Detail View");
 
-                return renderDetail(new ModelAndView(attributes, "episode.ftl"), attributes);
+                return TemplateEngine.renderDetail(new ModelAndView(attributes, "episode.ftl"), attributes);
             } catch (NotFoundException e) {
-                return renderNotFound(getViewMap());
+                return TemplateEngine.renderNotFound(TemplateEngine.getViewMap());
             }
-        }, getTemplateEngine());
+        }, TemplateEngine.getTemplateEngine());
 
         /**
          * Season Detail View
          */
         get("/season/:id", (req, res) -> {
             try {
-                Map<String, Object> attributes = getViewMap();
+                Map<String, Object> attributes = TemplateEngine.getViewMap();
                 attributes.put("season", DAO.getSeason(Integer.parseInt(req.params(":id"))));
                 attributes.put("title", "Season Detail View");
 
-                return renderDetail(new ModelAndView(attributes, "season.ftl"), attributes);
+                return TemplateEngine.renderDetail(new ModelAndView(attributes, "season.ftl"), attributes);
             } catch (NotFoundException e) {
-                return renderNotFound(getViewMap());
+                return TemplateEngine.renderNotFound(TemplateEngine.getViewMap());
             }
-        }, getTemplateEngine());
+        }, TemplateEngine.getTemplateEngine());
 
         /**
          * Playlist Detail View
          */
         get("/playlist/:id", (req, res) -> {
             try {
-                Map<String, Object> attributes = getViewMap();
+                Map<String, Object> attributes = TemplateEngine.getViewMap();
                 attributes.put("playlist", DAO.getPlaylist(Integer.parseInt(req.params(":id"))));
                 attributes.put("title", "Playlist Detail View");
 
-                return renderDetail(new ModelAndView(attributes, "playlist.ftl"), attributes);
+                return TemplateEngine.renderDetail(new ModelAndView(attributes, "playlist.ftl"), attributes);
             } catch (NotFoundException e) {
-                return renderNotFound(getViewMap());
+                return TemplateEngine.renderNotFound(TemplateEngine.getViewMap());
             }
-        }, getTemplateEngine());
+        }, TemplateEngine.getTemplateEngine());
 
         /**
          * Search for artifacts
          */
         get("/search/:type/:keyword", (req, res) -> {
             try {
-                Map<String, Object> attributes = getViewMap();
+                Map<String, Object> attributes = TemplateEngine.getViewMap();
                 String keyword = req.params(":keyword");
 
                 if (keyword.equalsIgnoreCase("all")) keyword = "";
@@ -182,11 +170,11 @@ public class Main {
                     throw new TypeNotFoundException();
                 }
 
-                return renderResults(new ModelAndView(attributes, resultTemplate), attributes);
+                return TemplateEngine.renderResults(new ModelAndView(attributes, resultTemplate), attributes);
             } catch (TypeNotFoundException e) {
-                return renderTypeNotFound(getViewMap());
+                return TemplateEngine.renderTypeNotFound(TemplateEngine.getViewMap());
             }
-        }, getTemplateEngine());
+        }, TemplateEngine.getTemplateEngine());
 
         /**
          * Create Rating
@@ -230,108 +218,5 @@ public class Main {
          * Initialize Database Connection
          */
         DAO.getDatabaseConnection();
-    }
-
-    /**
-     * Render main template with blank content
-     *
-     * @return
-     */
-    protected static ModelAndView render() {
-        Map<String, Object> attributes = getViewMap();
-        attributes.put("content", "");
-        attributes.put("userData", DAO.getUser());
-        attributes.put("figures", DAO.getFigures());
-        attributes.put("haueser", DAO.getHaeuser());
-        attributes.put("seasons", DAO.getSeasons());
-        attributes.put("playlists", DAO.getPlaylists());
-
-        return new ModelAndView(attributes, "index.ftl");
-    }
-
-    /**
-     * Render main detail template
-     *
-     * @param modelAndView
-     * @param additionalAttributes
-     * @return
-     */
-    protected static ModelAndView renderDetail(ModelAndView modelAndView, Map<String, Object> additionalAttributes) {
-        Map<String, Object> attributes = getViewMap();
-
-        attributes.putAll(additionalAttributes);
-        attributes.put("content", getTemplateEngine().render(modelAndView));
-        attributes.put("userData", DAO.getUser());
-
-        return new ModelAndView(attributes, "detail.ftl");
-    }
-
-    /**
-     * Render main results template
-     *
-     * @param modelAndView
-     * @param additionalAttributes
-     * @return
-     */
-    protected static ModelAndView renderResults(ModelAndView modelAndView, Map<String, Object> additionalAttributes) {
-        Map<String, Object> attributes = getViewMap();
-
-        attributes.putAll(additionalAttributes);
-        attributes.put("content", getTemplateEngine().render(modelAndView));
-        attributes.put("userData", DAO.getUser());
-
-        return new ModelAndView(attributes, "results.ftl");
-    }
-
-    /**
-     * Render NotFound template
-     *
-     * @param attributes
-     * @return
-     */
-    protected static ModelAndView renderNotFound(Map<String, Object> attributes) {
-        attributes.put("userData", DAO.getUser());
-        return new ModelAndView(attributes, "notFound.ftl");
-    }
-
-    /**
-     * Render TypeNotFound template
-     *
-     * @param attributes
-     * @return
-     */
-    protected static ModelAndView renderTypeNotFound(Map<String, Object> attributes) {
-        attributes.put("userData", DAO.getUser());
-        return new ModelAndView(attributes, "typeNotFound.ftl");
-    }
-
-    /**
-     * Get View Map
-     *
-     * @return
-     */
-    protected static Map<String, Object> getViewMap() {
-        return new HashMap<String, Object>();
-    }
-
-    /**
-     * Get Template Engine Instance
-     *
-     * @return
-     */
-    protected static FreeMarkerEngine getTemplateEngine() {
-        if (Main.templateEngine == null) {
-            /**
-             * FreeMarker Initialization
-             */
-            FreeMarkerEngine freeMarkerEngine = new FreeMarkerEngine();
-            Configuration freeMarkerConfiguration = new Configuration();
-            freeMarkerConfiguration.setTemplateLoader(new ClassTemplateLoader(Main.class, "/"));
-            freeMarkerEngine.setConfiguration(freeMarkerConfiguration);
-
-            Main.templateEngine = freeMarkerEngine;
-        }
-
-        return Main.templateEngine;
     }
 }
