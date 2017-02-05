@@ -1,3 +1,5 @@
+import Exceptions.NotFoundException;
+import Exceptions.TypeNotFoundException;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import org.apache.commons.dbutils.DbUtils;
