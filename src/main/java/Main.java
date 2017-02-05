@@ -185,7 +185,7 @@ public class Main {
         });
 
         /**
-         * Create Rating
+         * Create Playlist
          */
         get("/createPlaylist", (req, res) -> {
             DAO.createPlaylist(req.queryMap().get("title").value());
