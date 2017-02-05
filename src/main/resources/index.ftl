@@ -151,7 +151,7 @@
                             <td>${figure.besitzer} / ${figure.besitzerTitel}</td>
                             <td>${figure.heimat}</td>
                             <td><i class="fa fa-paw"></i> Tier</td>
-                            <td><td><a href="/animal/${figure.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></td></td>
+                            <td><a href="/animal/${figure.id}" class="btn btn-primary">Öffnen <i class="fa fa-arrow-circle-o-right"></i></a></td>
                         </tr>
                     </#if>
                 </#list>
