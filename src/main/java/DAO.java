@@ -1,7 +1,5 @@
 import Exceptions.NotFoundException;
 import org.apache.commons.dbutils.DbUtils;
-
-import org.apache.commons.dbutils.DbUtils;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
