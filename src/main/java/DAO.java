@@ -27,21 +27,25 @@ public class DAO {
      * @return
      */
     protected static Connection getDatabaseConnection() {
-        if (DAO.databaseConnection == null) {
-            try {
-                // Load Driver
-                Class.forName("com.mysql.jdbc.Driver");
+        try {
+            if (DAO.databaseConnection == null || DAO.databaseConnection.isClosed()) {
+                try {
+                    // Load Driver
+                    Class.forName("com.mysql.jdbc.Driver");
 
-                // Create Connection
-                DAO.databaseConnection = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_of_thrones?user=root&password=MKataturk89");
-            } catch (ClassNotFoundException e) {
-                System.out.println("Unable to find driver. Please check the dependencies.");
-            } catch (SQLException e) {
-                System.out.println("Unable to establish a connection to server: ");
-                System.out.println("SQLException: " + e.getMessage());
-                System.out.println("SQLState: " + e.getSQLState());
-                System.out.println("VendorError: " + e.getErrorCode());
+                    // Create Connection
+                    DAO.databaseConnection = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_of_thrones?user=root&password=MKataturk89");
+                } catch (ClassNotFoundException e) {
+                    System.out.println("Unable to find driver. Please check the dependencies.");
+                } catch (SQLException e) {
+                    System.out.println("Unable to establish a connection to server: ");
+                    System.out.println("SQLException: " + e.getMessage());
+                    System.out.println("SQLState: " + e.getSQLState());
+                    System.out.println("VendorError: " + e.getErrorCode());
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
         return DAO.databaseConnection;

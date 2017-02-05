@@ -2,6 +2,7 @@ import Exceptions.NotFoundException;
 import Exceptions.TypeNotFoundException;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
+import org.apache.commons.dbutils.DbUtils;
 import spark.ModelAndView;
 import spark.Spark;
 import spark.template.freemarker.FreeMarkerEngine;
@@ -209,7 +210,7 @@ public class Main {
          */
         after((request, response) -> {
             // Close Database Connection
-            //DbUtils.closeQuietly(getDatabaseConnection());
+            DbUtils.closeQuietly(DAO.getDatabaseConnection());
 
             // GZIP request
             response.header("Content-Encoding", "gzip");
@@ -229,23 +230,6 @@ public class Main {
          * Initialize Database Connection
          */
         DAO.getDatabaseConnection();
-    }
-
-    /**
-     * Render Template
-     * <p>
-     * This method will render a child template into
-     * the main structure template with all dependencies
-     *
-     * @param modelAndView
-     * @return
-     */
-    protected static ModelAndView render(ModelAndView modelAndView) {
-        Map<String, Object> attributes = getViewMap();
-        attributes.put("content", getTemplateEngine().render(modelAndView));
-        attributes.put("userData", DAO.getUser());
-
-        return new ModelAndView(attributes, "index.ftl");
     }
 
     /**
